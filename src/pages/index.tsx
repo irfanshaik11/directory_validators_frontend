@@ -1,6 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
-import { FaChartLine, FaCoins, FaList } from "react-icons/fa";
+import { FaChartLine, FaCoins, FaList, FaTimes } from "react-icons/fa";
 import { useState } from "react";
 import { Header } from "~/components/Header";
 import { Stake } from "~/components/Stake";
@@ -12,22 +12,27 @@ import MainnetValidator from "~/components/MainnetValidator";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("stake");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const renderContent = () => {
     switch (activeTab) {
       case "stake":
-        return <Stake />;
+        return <Stake searchQuery={searchQuery} />;
       case "mainnet-validator":
-        return <MainnetValidator />;
+        return <MainnetValidator searchQuery={searchQuery} />;
       case "preconf":
-        return <PreconfTransactions />;
+        return <PreconfTransactions searchQuery={searchQuery} />;
       case "hoodi":
-        return <HoodiTransactions />;
+        return <HoodiTransactions searchQuery={searchQuery} />;
       case "mainnet":
-        return <MainnetTransactions />;
+        return <MainnetTransactions searchQuery={searchQuery} />;
       default:
-        return <Stake />;
+        return <Stake searchQuery={searchQuery} />;
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   return (
@@ -102,6 +107,27 @@ export default function Home() {
         <div className="flex flex-col w-full">
           {/* HEADER */}
           <Header />
+          {/* SEARCH BAR */}
+          <div className="w-full max-w-2xl mx-auto mt-8 mb-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search Validators,transactions..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 placeholder:text-gray-500"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="w-3/4 mt-14 items-center justify-center flex flex-row ml-auto mr-auto">
             {renderContent()}
           </div>

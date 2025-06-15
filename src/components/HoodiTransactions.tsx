@@ -7,9 +7,20 @@ interface Transaction {
   timestamp: string;
 }
 
-const HoodiTransactions = () => {
+interface HoodiTransactionsProps {
+  searchQuery?: string;
+}
+
+const HoodiTransactions = () => ({ searchQuery }: Props) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 1000;
+  
+  const filtered = transactionType.filter((tx) => {
+      tx.tx_hash.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.timestamp.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tx.slot.toString().includes(searchQuery)
+    });
+  }
 
   return (
     <div className="w-full">
@@ -52,6 +63,6 @@ const HoodiTransactions = () => {
       </div>
     </div>
   );
-};
+  
 
 export default HoodiTransactions; 

@@ -4,10 +4,12 @@ import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import PreconfTransactions from "./PreconfTransactions";
 import { FiExternalLink } from "react-icons/fi";
+import SearchBar from "./SearchBar";
 
 export const Stake = () => {
   const { isConnected } = useAccount();
   const [activeData, setActiveData] = useState<Validator[]>([]);
+  const [filteredData, setFilteredData] = useState<Validator[]>([]);
   const [inactiveData, setInactiveData] = useState<Validator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +156,21 @@ export const Stake = () => {
     ? ((ourValidators / totalNetworkValidators) * 100).toFixed(2)
     : "0.00";
 
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredData(activeData);
+      return;
+    }
+    const filtered = activeData.filter(validator => 
+      validator.validator_name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredData(filtered);
+  };
+
+  useEffect(() => {
+    setFilteredData(activeData);
+  }, [activeData]);
+
   if (error) {
     return (
       <div className="flex w-full flex-col items-center gap-8">
@@ -199,6 +216,7 @@ export const Stake = () => {
           </div>
         ) : (
           <>
+            <SearchBar onSearch={handleSearch} placeholder="Search validators..." />
             <div className="flex w-full flex-row gap-3">
               <ValidatorBlock title="Average Latency" value={`${averageLatency} ms`} />
               <ValidatorBlock 
@@ -216,7 +234,7 @@ export const Stake = () => {
                 value={"$1.3B"}
               />
             </div>
-            <SortableTable activeData={activeData} inactiveData={inactiveData} />
+            <SortableTable activeData={filteredData} inactiveData={inactiveData} />
           </>
         )}
       </div>

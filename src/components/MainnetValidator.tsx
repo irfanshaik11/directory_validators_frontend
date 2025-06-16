@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import SortableTable, { Validator } from "../components/SortableTable";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import SearchBar from "./SearchBar";
 
 export const MainnetValidator = () => {
   const { isConnected } = useAccount();
   const [activeData, setActiveData] = useState<Validator[]>([]);
+  const [filteredData, setFilteredData] = useState<Validator[]>([]);
   const [inactiveData, setInactiveData] = useState<Validator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +82,21 @@ export const MainnetValidator = () => {
     };
   }, []);
 
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredData(activeData);
+      return;
+    }
+    const filtered = activeData.filter(validator => 
+      validator.validator_name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredData(filtered);
+  };
+
+  useEffect(() => {
+    setFilteredData(activeData);
+  }, [activeData]);
+
   // Compute statistics
   const averageCommission =
     activeData.length > 0
@@ -131,32 +148,25 @@ export const MainnetValidator = () => {
           </div>
         ) : (
           <>
-              <>   
-           <div className="flex w-full flex-row  gap-3">
-
-            {/* <ValidatorBlock title="Validators " value={"0"} /> */}
-            <ValidatorBlock title="Average Latency" value={`${averageLatency} ms`} />
-            <ValidatorBlock title="Eth blocks supporting interstate preconfs last 24 hrs" value={`${preconfPercentage}%`} />
-          </div></>
+            <SearchBar onSearch={handleSearch} placeholder="Search validators..." />
+            <div className="flex w-full flex-row gap-3">
+              <ValidatorBlock title="Average Latency" value={`${averageLatency} ms`} />
+              <ValidatorBlock title="Eth blocks supporting interstate preconfs last 24 hrs" value={`${preconfPercentage}%`} />
+            </div>
             <div className="flex w-full flex-row gap-4">
               <ValidatorBlock
                 title="Active Validators"
                 value={activeData.length.toString()}
               />
-                 <ValidatorBlock
+              <ValidatorBlock
                 title="Restaked insurance"
                 value={"$1.3B"}
               />
-  
             </div>
-            <>   
-         </>
-            <SortableTable activeData={activeData} inactiveData={inactiveData} />
+            <SortableTable activeData={filteredData} inactiveData={inactiveData} />
           </>
         )}
       </div>
-
-    
     </div>
   );
 };

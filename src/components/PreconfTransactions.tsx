@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { FiChevronLeft, FiChevronRight, FiExternalLink } from "react-icons/fi";
+import SearchBar from "./SearchBar";
 
 interface Transaction {
   tx_hash: string;
@@ -34,6 +35,7 @@ const ValidatorBlock = ({ title, value }: { title: string; value: number }) => (
 
 const PreconfTransactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [activeData, setActiveData] = useState<Validator[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -153,6 +155,22 @@ const PreconfTransactions = () => {
     fetchValidators();
   }, []);
 
+  const handleSearch = (query: string) => {
+    if (!query.trim()) {
+      setFilteredTransactions(transactions);
+      return;
+    }
+    const filtered = transactions.filter(tx => 
+      tx.tx_hash.toLowerCase().includes(query.toLowerCase()) ||
+      tx.slot.toString().includes(query)
+    );
+    setFilteredTransactions(filtered);
+  };
+
+  useEffect(() => {
+    setFilteredTransactions(transactions);
+  }, [transactions]);
+
   const pageData = transactions.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -190,8 +208,6 @@ const PreconfTransactions = () => {
 
   return (
     <div className="w-full">
-  
-
       {/* Preconf Stats */}
       <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
         <h4 className="text-sm font-medium text-gray-500 mb-2">Eth blocks supporting interstate preconfs last 24 hrs</h4>
@@ -204,62 +220,60 @@ const PreconfTransactions = () => {
         </div>
       ) : (
         <>
-      
-          <>
-            <table className="w-full rounded-lg border border-gray-200 text-sm">
-              <thead>
-                <tr className="bg-gray-100 text-gray-700">
-                  <th className="p-3 text-left">Transaction Hash</th>
-                  <th className="p-3 text-left">Timestamp</th>
-                  <th className="p-3 text-left">Slot</th>
+          <SearchBar onSearch={handleSearch} placeholder="Search by transaction hash or slot..." />
+          <table className="w-full rounded-lg border border-gray-200 text-sm">
+            <thead>
+              <tr className="bg-gray-100 text-gray-700">
+                <th className="p-3 text-left">Transaction Hash</th>
+                <th className="p-3 text-left">Timestamp</th>
+                <th className="p-3 text-left">Slot</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={3} className="p-4 text-center text-gray-500">
+                    No transactions found
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {pageData.length === 0 ? (
-                  <tr>
-                    <td colSpan={3} className="p-4 text-center text-gray-500">
-                      No transactions found
-                    </td>
+              ) : (
+                filteredTransactions.map((tx, index) => (
+                  <tr key={index} className="border-t text-left hover:bg-gray-50">
+                    <td className="p-3 font-mono">{tx.tx_hash}</td>
+                    <td className="p-3">{new Date(tx.timestamp).toLocaleString()}</td>
+                    <td className="p-3">{tx.slot}</td>
                   </tr>
-                ) : (
-                  pageData.map((tx, index) => (
-                    <tr key={index} className="border-t text-left hover:bg-gray-50">
-                      <td className="p-3 font-mono">{tx.tx_hash}</td>
-                      <td className="p-3">{new Date(tx.timestamp).toLocaleString()}</td>
-                      <td className="p-3">{tx.slot}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                ))
+              )}
+            </tbody>
+          </table>
 
-            {/* Pagination */}
-            <div className="ml-auto mr-0 mt-4 flex w-1/6 justify-between text-xs">
-              <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-                className={`rounded border px-4 py-2 ${currentPage === 1
-                    ? "cursor-not-allowed bg-gray-300"
-                    : "bg-emerald-300 text-black hover:bg-emerald-400"
-                  }`}
-              >
-                <FiChevronLeft />
-              </button>
-              <span className="py-2">
-                Page {currentPage} of {Math.ceil(transactions.length / itemsPerPage)}
-              </span>
-              <button
-                disabled={currentPage === Math.ceil(transactions.length / itemsPerPage)}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-                className={`rounded border px-4 py-2 ${currentPage === Math.ceil(transactions.length / itemsPerPage)
-                    ? "cursor-not-allowed bg-gray-300"
-                    : "bg-emerald-300 text-black hover:bg-emerald-400"
-                  }`}
-              >
-                <FiChevronRight />
-              </button>
-            </div>
-          </>
+          {/* Pagination */}
+          <div className="ml-auto mr-0 mt-4 flex w-1/6 justify-between text-xs">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+              className={`rounded border px-4 py-2 ${currentPage === 1
+                  ? "cursor-not-allowed bg-gray-300"
+                  : "bg-emerald-300 text-black hover:bg-emerald-400"
+                }`}
+            >
+              <FiChevronLeft />
+            </button>
+            <span className="py-2">
+              Page {currentPage} of {Math.ceil(transactions.length / itemsPerPage)}
+            </span>
+            <button
+              disabled={currentPage === Math.ceil(transactions.length / itemsPerPage)}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+              className={`rounded border px-4 py-2 ${currentPage === Math.ceil(transactions.length / itemsPerPage)
+                  ? "cursor-not-allowed bg-gray-300"
+                  : "bg-emerald-300 text-black hover:bg-emerald-400"
+                }`}
+            >
+              <FiChevronRight />
+            </button>
+          </div>
         </>
       )}
     </div>
